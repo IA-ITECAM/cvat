@@ -1,0 +1,38 @@
+metadata:
+  name: pth-facebookresearch-sam3-spark-proxy
+  namespace: cvat
+  annotations:
+    name: "SAM 3 – DGX Spark"
+    type: interactor
+    framework: PyTorch
+    min_pos_points: "1"
+    min_neg_points: "0"
+    startswith_box_optional: true
+    help_message: "SAM 3 proxy running inference on the DGX Spark."
+
+spec:
+  description: "Proxy interactor that forwards CVAT prompts to SAM 3 on a DGX Spark"
+  runtime: "python:3.10"
+  handler: main:handler
+  eventTimeout: 120s
+  env:
+    - name: SAM3_URL
+      value: "http://REPLACE_WITH_SPARK_PRIVATE_IP:8000/segment"
+  build:
+    image: cvat.pth.facebookresearch.sam3_spark_proxy:latest
+    baseImage: python:3.10-slim
+    directives:
+      preCopy:
+        - kind: RUN
+          value: "pip install --no-cache-dir requests"
+  triggers:
+    myHttpTrigger:
+      kind: http
+      numWorkers: 1
+      attributes:
+        maxRequestBodySize: 33554432
+  platform:
+    attributes:
+      restartPolicy:
+        name: always
+        maximumRetryCount: 3
